@@ -37,6 +37,7 @@ You can run the ``test_installation.py`` script to ensure all libraries have suc
     Python - 3.8.20
     NumPy - 1.19.5
     Pandas - 1.4.4
+    Cobra - 0.24.0
     PyTFA - 0.9.4
     ETFL - 0.0.2
     GurobiPy - 11.0.3 (This will vary depending on the installed solver)
