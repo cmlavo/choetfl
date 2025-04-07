@@ -21,11 +21,25 @@ Next, navigate to ``choetfl`` and create the conda virtual environment using the
 Next, navigate to pyTFA and install it as a package. Repeat this step for ETFL.
 
     cd ../pytfa
-    conda install -e .
+    pip install -e .
     cd ../etfl
-    conda install -e .
+    pip install -e .
 
-Finally, an MILP solver such as Gurobi or CPLEX is required. Follow relevant installation instructions for the Python installation of your solver of choice.
+Finally, an MILP solver such as Gurobi or CPLEX is required. Follow relevant installation instructions for the Python installation of your solver of choice. For example, if using Gurobi:
+
+    conda install gurobi::gurobi
+
+### Verifying Installation
+
+You can run the first cell in the ``test_installation.ipynb`` notebook to ensure all libraries have successfully been installed with the correct version. You should expect the following output:
+
+    Testing library versions:
+    Python - 3.8.20
+    NumPy - 1.19.5
+    Pandas - 1.4.4
+    PyTFA - 0.9.4
+    ETFL - 0.0.2
+    GurobiPy - 11.0.3 (This will vary depending on the installed solver)
 
 ## Running the Code
 
