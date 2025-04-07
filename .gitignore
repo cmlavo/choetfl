@@ -1,0 +1,7 @@
+# Ignore data, models, outputs folders
+/data/
+/models/
+/outputs/
+
+# Ignore any pychaches
+**/__pycache__/
