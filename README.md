@@ -31,7 +31,7 @@ Finally, an MILP solver such as Gurobi or CPLEX is required. Follow relevant ins
 
 ### Verifying Installation
 
-You can run the first cell in the ``test_installation.ipynb`` notebook to ensure all libraries have successfully been installed with the correct version. You should expect the following output:
+You can run the ``test_installation.py`` script to ensure all libraries have successfully been installed with the correct version. You should expect the following output:
 
     Testing library versions:
     Python - 3.8.20
