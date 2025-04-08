@@ -1,5 +1,6 @@
 baseline:
   file_name: "iCHO2291.xml"
-  verbose: True
+  biomass_reaction_id: ""
 
 solver: "gurobi"
+verbose: True
