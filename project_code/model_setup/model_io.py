@@ -4,6 +4,7 @@ Function definitions for import, export, reading and writing operations related 
 
 import cobra
 import os
+import pprint
 import time
 from typing import Tuple
 
@@ -31,10 +32,10 @@ def import_xml_model(model_name: str, solver: str = 'gurobi', verbose: bool = Fa
     cobra_model, model_validation = cobra.io.validate_sbml_model(model_dir)
     end_time = time.perf_counter()
     execution_time = end_time - start_time
-    if verbose: print(f"{model_name} import complete ({execution_time:.4f} seconds).")
+    if verbose: print(f"{model_name} import complete ({execution_time:.2f} seconds).")
 
     cobra_model.solver = solver    
 
-    if verbose: print(model_validation)
+    if verbose: pprint.pprint(f"Errors: {model_validation}")
     
     return cobra_model, model_validation
