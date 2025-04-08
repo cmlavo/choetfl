@@ -1,6 +1,25 @@
 baseline:
   file_name: "iCHO2291.xml"
-  biomass_reaction_id: ""
+  #file_name: "iCHOv1_final.xml"
+  biomass_rxn_id: "biomass_cho"
+  #biomass_rxn_id: "biomass_cho_prod"
+  BBBs_params:
+    BBBs: ['protein', 'carbohydrate', 'lipid', 'RNA', 'DNA']
+    manual_mass_ratios: # add any manually set mass ratios here as dictionary entries (key = building block, value = mass ratio). This causes the default mass ratio calculation for the given BBB to be skipped.
+      carbohydrate: 0.004164738546969
+    genmets: # a dictionary of the metabolite IDs for the generic building blocks. Their mass ratios will be calculated from the BBS_subrxns synthesis reactions.
+      protein: "prot[c]"
+      DNA: 'dna[c]'
+      RNA: 'rna[c]'
+    subrxns: # if a BBB is listed here, then the stoichiometric coefficients for the constituent metabolites are taken from the corresponding subreaction ID, else the coefficients are taken from the main biomass reaction.
+      protein: "PROTsyn"
+      RNA: "RNAsyn"
+      DNA: "DNAsyn"
+    constituent_mets: # dictionary containing dictionaries for each BBB, with (key = metabolite ID in biomass_rxn or in BBBs_subrxns if applicable for stoich coeff, value = equivalent metabolite ID to use for MW calc). Often the key and the value will be the same.
+      protein: {'alatrna[c]':'ala_L[c]', 'argtrna[c]':'arg_L[c]','asntrna[c]':'asn_L[c]','asntrna[c]':'asn_L[c]', 'cystrna[c]':'cys_L[c]', 'glntrna[c]':'gln_L[c]', 'glutrna[c]':'glu_L[c]', 'glytrna[c]':'gly_L[c]', 'histrna[c]':'his_L[c]', 'iletrna[c]':'ile_L[c]', 'leutrna[c]':'leu_L[c]', 'lystrna[c]':'lys_L[c]', 'mettrna[c]':'met_L[c]', 'phetrna[c]':'phe_L[c]', 'protrna[c]':'pro_L[c]', 'sertrna[c]':'ser_L[c]', 'thrtrna[c]':'thr_L[c]', 'trptrna[c]':'trp_L[c]', 'tyrtrna[c]':'tyr_L[c]', 'valtrna[c]':'val_L[c]'}
+      lipid: {'chsterol[c]':'chsterol[c]', 'clpn_cho[c]':'clpn_cho[c]', 'pa_cho[c]':'pa_cho[c]', 'pail_cho[c]':'pail_cho[c]', 'pchol_cho[c]':'pchol_cho[c]', 'pe_cho[c]':'pe_cho[c]', 'pglyc_cho[c]':'pglyc_cho[c]', 'ps_cho[c]':'ps_cho[c]', 'sphmyln_cho[c]':'sphmyln_cho[c]', 'tag_cho[c]':'tag_cho[c]', 'xolest2_cho[c]':'xolest2_cho[c]'}
+      DNA: {'datp[n]':'datp[n]', 'dctp[n]':'dctp[n]', 'dgtp[n]':'dgtp[n]', 'dttp[n]':'dttp[n]'}
+      RNA: {'atp[c]':'atp[c]', 'ctp[c]':'ctp[c]', 'gtp[c]':'gtp[c]', 'utp[c]':'utp[c]'}    
 
 solver: "gurobi"
 verbose: True

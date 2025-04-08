@@ -36,6 +36,8 @@ def import_xml_model(model_name: str, solver: str = 'gurobi', verbose: bool = Fa
 
     cobra_model.solver = solver    
 
-    if verbose: pprint.pprint(f"Errors: {model_validation}")
+    if verbose: 
+        print("Errors:")
+        pprint.pprint(model_validation)
     
     return cobra_model, model_validation

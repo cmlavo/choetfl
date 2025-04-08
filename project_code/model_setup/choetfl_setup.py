@@ -2,16 +2,16 @@
 This script executes all steps for the creation of the choETFL model.
 """
 
-import os
 import sys
+from pathlib import Path
 
 # Adding the parent directory to the system path
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'project_code'))
-sys.path.append(parent_dir)
+parent_dir = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(parent_dir))
 
 import model_io
 import model_ops
-from project_code import utils
+import utils
 
 def main(config: str = "default.yml"):
     """
@@ -28,10 +28,14 @@ def main(config: str = "default.yml"):
     ### BASELINE MODEL ###
 
     # Importing the baseline iCHO2291 model in .xml format from which choETFL is constructed.
-    baseline_model, model_validation = model_io.import_json_model(config.baseline.file_name, config.solver, config.baseline.verbose)
+    baseline_model, _ = model_io.import_xml_model(config.baseline.file_name, config.solver, config.verbose)
 
-    # Sanitizing metabolite and reaction names
-    #baseline_model = model_ops.sanitize_model(baseline_model)
+    # Sanitizing metabolite and reaction names so that any IDs starting with a digit are prefixed with an underscore.
+    #sanitized_model = model_ops.sanitize_model(baseline_model) TODO: Check if this is necessary
+    sanitized_model = baseline_model.copy() # TODO: remove if unnecessary, replace sanitized_model with baseline_model in subsequent steps
+
+    # Extracting the mass ratios of each biomass building block (BBB) from the biomass reaction of the baseline model
+    mass_ratios = model_ops.compute_BBB_mass_ratios(baseline_model, config.baseline.biomass_rxn_id, config.baseline.BBBs_params, config.verbose)
 
     ### 
     
