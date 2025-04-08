@@ -7,7 +7,7 @@ import os
 import time
 from typing import Tuple
 
-def import_json_model(model_name: str, solver: str = 'gurobi', verbose: bool = False) -> Tuple[cobra.Model, str]:
+def import_xml_model(model_name: str, solver: str = 'gurobi', verbose: bool = False) -> Tuple[cobra.Model, str]:
     """
     Imports a .xml model located in the /models directory based on the file name provided and the selected solver.
 
