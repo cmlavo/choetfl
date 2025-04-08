@@ -4,6 +4,7 @@ Function definitions for import, export, reading and writing operations related 
 
 import cobra
 import os
+import time
 from typing import Tuple
 
 def import_json_model(model_name: str, solver: str = 'gurobi', verbose: bool = False) -> Tuple[cobra.Model, str]:
@@ -22,10 +23,17 @@ def import_json_model(model_name: str, solver: str = 'gurobi', verbose: bool = F
     model_dir = os.path.join(os.getcwd(), "models/", model_name)
 
     assert os.path.exists(model_dir), f"Model file {model_name} does not exist in the /models directory."
-    assert model_name.endswith('.xml'), "Model must be an .xml file"    
+    assert model_name.endswith('.xml'), "Model must be an .xml file"
 
+    if verbose: print(f"Importing {model_name}...")
+
+    start_time = time.perf_counter()
     cobra_model, model_validation = cobra.io.validate_sbml_model(model_dir)
-    cobra_model.solver = solver
+    end_time = time.perf_counter()
+    execution_time = end_time - start_time
+    if verbose: print(f"{model_name} import complete ({execution_time:.4f} seconds).")
+
+    cobra_model.solver = solver    
 
     if verbose: print(model_validation)
     
