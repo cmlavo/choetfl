@@ -1,0 +1,7 @@
+Steps:
+
+X. Obtain a set of different biomass reactions for different growth rates (from differing fractions of each biomass building block at 
+	different specific growth rate values) from experimental data.
+X. Plot growth rate with normal FBA and ETFL as afunction of glucose uptake, compare to experimental growth values (particularly 
+	maximum growth observed in rich medium).
+	
