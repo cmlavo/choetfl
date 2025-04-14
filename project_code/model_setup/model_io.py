@@ -23,8 +23,10 @@ def import_xml_model(model_name: str, solver: str = 'gurobi', verbose: bool = Fa
 
     model_dir = os.path.join(os.getcwd(), "models/", model_name)
 
+    if verbose: print("\n")
+
     assert os.path.exists(model_dir), f"Model file {model_name} does not exist in the /models directory."
-    assert model_name.endswith('.xml'), "Model must be an .xml file"
+    assert model_name.endswith('.xml'), "Model must be an .xml file."
 
     if verbose: print(f"Importing {model_name}...")
 

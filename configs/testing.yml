@@ -9,17 +9,23 @@ baseline:
       carbohydrate: 0.004164738546969
     genmets: # a dictionary of the metabolite IDs for the generic building blocks. Their mass ratios will be calculated from the BBS_subrxns synthesis reactions.
       protein: "prot[c]"
-      DNA: 'dna[c]'
+      DNA: 'dna[n]'
       RNA: 'rna[c]'
     subrxns: # if a BBB is listed here, then the stoichiometric coefficients for the constituent metabolites are taken from the corresponding subreaction ID, else the coefficients are taken from the main biomass reaction.
       protein: "PROTsyn"
       RNA: "RNAsyn"
       DNA: "DNAsyn"
-    constituent_mets: # dictionary containing dictionaries for each BBB, with (key = metabolite ID in biomass_rxn or in BBBs_subrxns if applicable for stoich coeff, value = equivalent metabolite ID to use for MW calc). Often the key and the value will be the same.
-      protein: {'alatrna[c]':'ala_L[c]', 'argtrna[c]':'arg_L[c]','asntrna[c]':'asn_L[c]','asntrna[c]':'asn_L[c]', 'cystrna[c]':'cys_L[c]', 'glntrna[c]':'gln_L[c]', 'glutrna[c]':'glu_L[c]', 'glytrna[c]':'gly_L[c]', 'histrna[c]':'his_L[c]', 'iletrna[c]':'ile_L[c]', 'leutrna[c]':'leu_L[c]', 'lystrna[c]':'lys_L[c]', 'mettrna[c]':'met_L[c]', 'phetrna[c]':'phe_L[c]', 'protrna[c]':'pro_L[c]', 'sertrna[c]':'ser_L[c]', 'thrtrna[c]':'thr_L[c]', 'trptrna[c]':'trp_L[c]', 'tyrtrna[c]':'tyr_L[c]', 'valtrna[c]':'val_L[c]'}
-      lipid: {'chsterol[c]':'chsterol[c]', 'clpn_cho[c]':'clpn_cho[c]', 'pa_cho[c]':'pa_cho[c]', 'pail_cho[c]':'pail_cho[c]', 'pchol_cho[c]':'pchol_cho[c]', 'pe_cho[c]':'pe_cho[c]', 'pglyc_cho[c]':'pglyc_cho[c]', 'ps_cho[c]':'ps_cho[c]', 'sphmyln_cho[c]':'sphmyln_cho[c]', 'tag_cho[c]':'tag_cho[c]', 'xolest2_cho[c]':'xolest2_cho[c]'}
+    constituent_mets: # dictionary containing dictionaries for each BBB, with (key = metabolite ID in biomass_rxn or in BBBs_subrxns if applicable for stoich coeff, value = equivalent metabolite ID to use for MW calc OR manually set MW float). Often the key and the value will be the same.
+      protein: {'alatrna[c]':'ala_L[c]', 'argtrna[c]':'arg_L[c]','asntrna[c]':'asn_L[c]','asptrna[c]':'asp_L[c]', 'cystrna[c]':'cys_L[c]', 'glntrna[c]':'gln_L[c]', 'glutrna[c]':'glu_L[c]', 'glytrna[c]':'gly[c]', 'histrna[c]':'his_L[c]', 'iletrna[c]':'ile_L[c]', 'leutrna[c]':'leu_L[c]', 'lystrna[c]':'lys_L[c]', 'mettrna[c]':'met_L[c]', 'phetrna[c]':'phe_L[c]', 'protrna[c]':'pro_L[c]', 'sertrna[c]':'ser_L[c]', 'thrtrna[c]':'thr_L[c]', 'trptrna[c]':'trp_L[c]', 'tyrtrna[c]':'tyr_L[c]', 'valtrna[c]':'val_L[c]'}
+      lipid: {'chsterol[c]':'chsterol[c]', 'clpn_cho[c]':1472.411704, 'pa_cho[c]':707.166282, 'pail_cho[c]':870.314822, 'pchol_cho[c]':794.329702, 'pe_cho[c]':752.249962, 'pglyc_cho[c]':782.252762, 'ps_cho[c]':794.243582, 'sphmyln_cho[c]':733.173557220884, 'tag_cho[c]':897.752705662651, 'xolest2_cho[c]':655.204235220884}
       DNA: {'datp[n]':'datp[n]', 'dctp[n]':'dctp[n]', 'dgtp[n]':'dgtp[n]', 'dttp[n]':'dttp[n]'}
-      RNA: {'atp[c]':'atp[c]', 'ctp[c]':'ctp[c]', 'gtp[c]':'gtp[c]', 'utp[c]':'utp[c]'}    
+      RNA: {'atp[c]':'atp[c]', 'ctp[c]':'ctp[c]', 'gtp[c]':'gtp[c]', 'utp[c]':'utp[c]'}
+    mw_correction:
+      protein: -18.015
+      lipid: 0.0
+      RNA: -174.494
+      DNA: -174.494
+    mass_ratio_normalization: True # if True, the mass ratios of the BBBs are normalized so that their sum is 1
 
 solver: "gurobi"
 verbose: True
