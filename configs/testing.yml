@@ -20,12 +20,19 @@ baseline:
       lipid: {'chsterol[c]':'chsterol[c]', 'clpn_cho[c]':1472.411704, 'pa_cho[c]':707.166282, 'pail_cho[c]':870.314822, 'pchol_cho[c]':794.329702, 'pe_cho[c]':752.249962, 'pglyc_cho[c]':782.252762, 'ps_cho[c]':794.243582, 'sphmyln_cho[c]':733.173557220884, 'tag_cho[c]':897.752705662651, 'xolest2_cho[c]':655.204235220884}
       DNA: {'datp[n]':'datp[n]', 'dctp[n]':'dctp[n]', 'dgtp[n]':'dgtp[n]', 'dttp[n]':'dttp[n]'}
       RNA: {'atp[c]':'atp[c]', 'ctp[c]':'ctp[c]', 'gtp[c]':'gtp[c]', 'utp[c]':'utp[c]'}
-    mw_correction:
+    mw_correction: # this value is added to the molar mass of each constituent metabolite in the respective list. Accounts for the initial monomer mass lost from the macromolecule chain from the polymerization reaction (ex: H2O for protein, pyrophosphate for DNA/RNA)
       protein: -18.015
       lipid: 0.0
       RNA: -174.494
       DNA: -174.494
     mass_ratio_normalization: True # if True, the mass ratios of the BBBs are normalized so that their sum is 1
+etfl:
+  GAM_params:
+    GAM_mets: ['atp[c]', 'adp[c]', 'h[c]', 'h2o[c]', 'pi[c]'] # list of GAM metabolites by ID in the biomass rxn
+  mu_discr:
+    mu_bins: 128 # number of bins for the discretization of the growth rate
+    mu_min: 0 # minimum growth rate
+    mu_max: 0.5 # maximum growth rate
 
 solver: "gurobi"
 verbose: True

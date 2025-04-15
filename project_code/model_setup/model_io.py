@@ -10,10 +10,10 @@ from typing import Tuple
 
 def import_xml_model(model_name: str, solver: str = 'gurobi', verbose: bool = False) -> Tuple[cobra.Model, str]:
     """
-    Imports a .xml model located in the /models directory based on the file name provided and the selected solver.
+    Imports a .xml model located in the models/ directory based on the file name provided and the selected solver.
 
     Args:
-        model_name (str): The name of the .json model file to be imported.
+        model_name (str): The name of the .xml model file to be imported.
         solver (str): The solver to be used. Default is 'gurobi'.
         verbose (bool): If True, prints the validation status of the model. Default is False.
     Returns:

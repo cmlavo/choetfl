@@ -67,7 +67,7 @@ def get_stoichiometric_coeffs(model: cobra.Model, BBB_constituent_mets: dict, bi
             BBB has no associated pseudo-metabolite.        
     Returns:
         stoichiometric_coeffs (dict): A dictionary (metabolite_ID: str, stoichiometric coefficient: float) containing the stoichiometric coefficients of each 
-            metabolite for the BBB.
+            metabolite for the BBB. Note that the sign of the stiochiometric coefficient is relative to the main biomass reaction.
     """
     stoichiometric_coeffs = {}
 
@@ -98,7 +98,7 @@ def compute_BBB_mass_ratios(model: cobra.Model, biomass_rxn_id: str, BBBs_params
         model (cobra.Model): The model to extract mass ratios from.
         biomass_rxn_id (str): The ID of the biomass reaction.
         BBBs_params (dict): A dictionary containing configuration parameters for the calculation of BBB mass ratios.
-        verbose (bool): If True, prints the biomass reaction and the mass ratios. Default is False.
+        verbose (bool): If True, prints mass ratios and status updates. Default is False.
     Returns:
         mass_ratios (dict): A dictionary (metabolite_ID: str, mass ratio: float) containing the mass ratios of each building block.
     """
@@ -145,3 +145,50 @@ def compute_BBB_mass_ratios(model: cobra.Model, biomass_rxn_id: str, BBBs_params
             pprint.pprint(mass_ratios)
 
     return mass_ratios
+
+def modify_GAM(model: cobra.Model, biomass_rxn_id: str, BBBs_params: dict, GAM_params: dict, verbose: bool = False) -> cobra.Model:
+    """
+    Modify the growth-associated maintenance (GAM) reaction of the model to remove the energetic cost of growth, maintenance
+    and peptide polymerization from the model. The energetic cost will later be added explicitly, so removing it from
+    the GAM avoids overestimating this energetic requirement.
+    Args:
+        model (cobra.Model): The model to modify.
+        biomass_rxn_id (str): The ID of the biomass reaction.
+        BBBs_params (dict): A dictionary containing configuration parameters for the BBBs.
+        GAM_params (dict): A dictionary containing configuration parameters for the GAM modification.
+        verbose (bool): If True, prints status updates. Default is False.
+    Returns:
+        GAM_modified_model (cobra.Model): The modified model.
+    """
+    
+    biomass_rxn = model.reactions.get_by_id(biomass_rxn_id)
+
+    subrxn_id = BBBs_params.subrxns.get('protein', None)
+    subrxn = None if subrxn_id == None else model.reactions.get_by_id(subrxn_id)
+
+    # getting number of moles of amino acids required to synthesize 1gDW of biomass
+    aa_stoichiometric_coeffs = get_stoichiometric_coeffs(model, BBBs_params.constituent_mets['protein'], biomass_rxn, BBBs_params.genmets.get('protein', None), subrxn)
+    total_moles_aa = -sum(aa_stoichiometric_coeffs.values()) # negative value since they are in the reactants, *-1  to make it positive
+
+    # since 2 moles of GTP are required to attach 1 mole of aa to the growing peptide chain, the total GTP expense is 2 * total_moles_aa
+    gtp_expense = 2 * total_moles_aa
+
+    # create dict of GAM metabolite (cobra.Metabolite) : GTP expense (float) pairs to subtract these values from the biomass reaction
+    GAM_metabolites = [model.metabolites.get_by_id(met_ID) for met_ID in GAM_params.GAM_mets]
+    GAM_dict = {}
+    for met in GAM_metabolites: 
+        assert met in biomass_rxn.metabolites, f"GAM metabolite {met.id} not found in biomass reaction {biomass_rxn.id}. Modify etfl.GAM_params.GAM_mets entry in config file."
+        GAM_dict[met] = -gtp_expense if met in biomass_rxn.reactants else gtp_expense
+
+    # subtract the GTP expense from the biomass reaction
+    biomass_rxn.subtract_metabolites(GAM_dict)
+
+    if verbose: 
+        print("\n")
+        print(f"GTP expense for peptide polymerization: {gtp_expense:.5f} mmol/gDW")
+        print("Modified biomass reaction:")
+        print(biomass_rxn.reaction)
+
+    return model
+
+    
