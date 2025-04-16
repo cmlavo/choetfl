@@ -26,7 +26,7 @@ def import_xml_model(model_name: str, solver: str = 'gurobi', verbose: bool = Fa
 
     model_path = os.path.join(os.getcwd(), "models/", model_name)
 
-    if verbose: print("\n")
+    if verbose: print("")
 
     assert os.path.exists(model_path), f"Model file {model_name} does not exist in the models/ directory."
     assert model_name.endswith('.xml'), "Model must be an .xml file."
@@ -73,7 +73,6 @@ def import_protein_complex_data(file_name: str, verbose: bool = False) -> pd.Dat
     # also strip all whitespace if not surrounded by quotes
     with open(file_path, 'r', encoding='utf-8') as f:
         content = utils.remove_unquoted_whitespace(f.read().replace('"', "'"))
-        breakpoint()
 
     # read the .csv file, with advanced parsing so that the delimiter is ignored if surrounded by quotes
     df = pd.read_csv(io.StringIO(content),header=0, delimiter=',', quotechar="'")
@@ -106,9 +105,12 @@ def merge_protein_complex_data(dataframes: list, multiples_treatment: int = 3, v
     Returns:
         pd.DataFrame: Merged dataframe with unique, combined entries.
     """
+
+    if verbose: print(f"Merging {len(dataframes)} protein complex dataframes...")
     
     # Merge all dataframes into one
     merged_df = pd.concat(dataframes, ignore_index=True)
+    initial_rows = merged_df.shape[0]
 
     # If items from the first row appear more than once, take the contents of the other columns (sets or dicts) and merge them while removing duplicates
     merged_df = merged_df.groupby('prot_id').agg({
@@ -116,5 +118,10 @@ def merge_protein_complex_data(dataframes: list, multiples_treatment: int = 3, v
         'components_ids': lambda x: utils.merge_dict(x, multiples_treatment),
         'products_ids': lambda x: utils.merge_set(x)
     }).reset_index()
+
+    final_rows = merged_df.shape[0]
+    if verbose: 
+        print(f"Merging operation removed {initial_rows-final_rows} rows.")
+        print(f"Final merged protein complex dataframe: [{final_rows} rows x {merged_df.shape[1]} columns].")
 
     return merged_df

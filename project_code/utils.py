@@ -141,13 +141,14 @@ def merge_dict(series: pd.Series, multiples_treatment: int) -> dict:
     for item in series:
         assert isinstance(item, dict), f"Item \'{item}\' is not a dict."
         for key, value in item.items():
-            if key in merged_dict:
+            if key in merged_dict and value != merged_dict[key]:
+                print(f"Warning: Component \'{key}\' appears multiple times in the protein complex data with different coefficient values. Merging values using treatment method {multiples_treatment}.")
                 if multiples_treatment   == 0: merged_dict[key] = min(merged_dict[key], value)
                 elif multiples_treatment == 1: merged_dict[key] = max(merged_dict[key], value)
                 elif multiples_treatment == 2: merged_dict[key] = (merged_dict[key] + value) / 2
                 elif multiples_treatment == 3: pass
                 elif multiples_treatment == 4: merged_dict[key] = value
-            else:
-                merged_dict[key] = value
+            elif key in merged_dict and value == merged_dict[key]: pass
+            else: merged_dict[key] = value
 
     return merged_dict

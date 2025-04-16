@@ -113,7 +113,7 @@ def compute_BBB_mass_ratios(model: cobra.Model, biomass_rxn_id: str, BBBs_params
     # Extract the mass ratios as a dictionary
     mass_ratios = {}
 
-    if verbose: print("\n")
+    if verbose: print("")
     
     for bbb in BBBs_params.BBBs:
 
@@ -184,9 +184,8 @@ def modify_GAM(model: cobra.Model, biomass_rxn_id: str, BBBs_params: dict, GAM_p
     # subtract the GTP expense from the biomass reaction
     biomass_rxn.subtract_metabolites(GAM_dict)
 
-    if verbose: 
-        print("\n")
-        print(f"GTP expense for peptide polymerization: {gtp_expense:.5f} mmol/gDW")
+    if verbose:
+        print(f"\nGTP expense for peptide polymerization: {gtp_expense:.5f} mmol/gDW")
         print("Modified biomass reaction:")
         print(biomass_rxn.reaction)
 
@@ -202,10 +201,15 @@ def develop_coupling_dict(model: cobra.Model, enz_coupl_params: dict, verbose: b
     Returns:
         coupling_dict (dict): A dictionary (cobra.Reaction: cobra.Enzyme) containing the coupling information for each reaction in the model.
     """
+
+    if verbose: print("")
     
     # Importing protein complex data as dataframes from the .csv files
     prot_complx_dfs = [model_io.import_protein_complex_data(file_name, verbose) for file_name in enz_coupl_params.prot_complx_files]
 
+    if verbose: print("")
+
     # Merging the dataframes into a single dataframe
     prot_complx_df = model_io.merge_protein_complex_data(prot_complx_dfs, enz_coupl_params.comp_coeff_mismatch_treatment, verbose)
-    breakpoint()
+    
+    #
