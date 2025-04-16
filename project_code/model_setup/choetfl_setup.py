@@ -44,10 +44,11 @@ def main(config: str = "default.yml"):
     
     ### MODEL MODIFICATION ###
     
-    # remove growth associated maintenance (GAM) cost of ATP from the biomass reaction; cost is later added explicitly
+    # Removing growth associated maintenance (GAM) cost of ATP from the biomass reaction; cost is later added explicitly
     GAM_modified_model = model_ops.modify_GAM(sanitized_model, config.baseline.biomass_rxn_id, config.baseline.BBBs_params, config.etfl.GAM_params, config.verbose)
 
-    
+    # Developing coupling dictionary of (Reaction:Enzyme list) pairs
+    coupling_dict = model_ops.develop_coupling_dict(GAM_modified_model, config.etfl.enz_coupl_params, config.verbose)
 
 if __name__ == "__main__":
     main("testing.yml")

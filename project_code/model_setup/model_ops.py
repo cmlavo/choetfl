@@ -1,9 +1,10 @@
 """
-Function definitions for model operations related to model setup.
+Function definitions for model manipulation operations related to model setup.
 """
 
 import cobra
 import pprint
+import model_io
 
 def sanitize_model(model: cobra.Model, verbose: bool = False) -> cobra.Model:
     """
@@ -191,4 +192,20 @@ def modify_GAM(model: cobra.Model, biomass_rxn_id: str, BBBs_params: dict, GAM_p
 
     return model
 
+def develop_coupling_dict(model: cobra.Model, enz_coupl_params: dict, verbose: bool = False) -> dict:
+    """
+    Develop a dictionary coupling all metabolic reactions to a list of etfl.Enzyme objects.
+    Args:
+        model (cobra.Model): The model to extract coupling information from.
+        enz_coupl_params (dict): Configuration parameters for the creation of the coupling dictionary.
+        verbose (bool): If True, prints status updates. Default is False.
+    Returns:
+        coupling_dict (dict): A dictionary (cobra.Reaction: cobra.Enzyme) containing the coupling information for each reaction in the model.
+    """
     
+    # Importing protein complex data as dataframes from the .csv files
+    prot_complx_dfs = [model_io.import_protein_complex_data(file_name, verbose) for file_name in enz_coupl_params.prot_complx_files]
+
+    # Merging the dataframes into a single dataframe
+    prot_complx_df = model_io.merge_protein_complex_data(prot_complx_dfs, enz_coupl_params.comp_coeff_mismatch_treatment, verbose)
+    breakpoint()

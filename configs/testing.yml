@@ -27,12 +27,16 @@ baseline:
       DNA: -174.494
     mass_ratio_normalization: True # if True, the mass ratios of the BBBs are normalized so that their sum is 1
 etfl:
-  GAM_params:
+  GAM_params: # configuration for growth-associated maintenance operations
     GAM_mets: ['atp[c]', 'adp[c]', 'h[c]', 'h2o[c]', 'pi[c]'] # list of GAM metabolites by ID in the biomass rxn
+  enz_coupl_params: # configuration for enzyme coupling
+    prot_complx_files: ['cho_prot_complx1.csv', 'cho_prot_complx2.csv'] # list of .csv data files containing the protein complex data to be imported (should be located in data/ folder)
+    comp_coeff_mismatch_treatment: 2 # how to treat instances where, for a given product, the two entries for the same product appear where monomer counts differ (this is an error in the data). 0 = take the lowest value, 1 = take the highest value, 2 = take the average, 3 = take the value which appeared first, 4 = take the value which appeared last
   mu_discr:
     mu_bins: 128 # number of bins for the discretization of the growth rate
     mu_min: 0 # minimum growth rate
     mu_max: 0.5 # maximum growth rate
+  
 
 solver: "gurobi"
 verbose: True
