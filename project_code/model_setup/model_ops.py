@@ -3,8 +3,12 @@ Function definitions for model manipulation operations related to model setup.
 """
 
 import cobra
-import pprint
+from ordered_set import OrderedSet
+import pandas as pd
+from pprint import pprint
 import model_io
+import utils
+from etfl.core import ThermoMEModel
 
 def sanitize_model(model: cobra.Model, verbose: bool = False) -> cobra.Model:
     """
@@ -133,7 +137,7 @@ def compute_BBB_mass_ratios(model: cobra.Model, biomass_rxn_id: str, BBBs_params
 
     if verbose: 
         print("Mass ratios:")
-        pprint.pprint(mass_ratios)
+        pprint(mass_ratios)
         print(f"Sum of mass fractions: {sum(mass_ratios.values())} g/gDW.")
 
     if BBBs_params.mass_ratio_normalization:
@@ -143,7 +147,7 @@ def compute_BBB_mass_ratios(model: cobra.Model, biomass_rxn_id: str, BBBs_params
             mass_ratios[bbb] /= total_mass
         if verbose:
             print("Normalized mass ratios:")
-            pprint.pprint(mass_ratios)
+            pprint(mass_ratios)
 
     return mass_ratios
 
@@ -191,15 +195,81 @@ def modify_GAM(model: cobra.Model, biomass_rxn_id: str, BBBs_params: dict, GAM_p
 
     return model
 
+def assoc_rxn_enz(model: cobra.Model, enzyme_dict: dict, genes_dict: dict, enz_coupl_params: dict, verbose: bool = False) -> dict:
+    """
+    Associate reactions in the model with their corresponding enzyme(s) based on the provided model, enzyme dictionary, and gene dictionary.
+    Set the appropriate k values for the enzymes based on the kcat data and the configuration file.
+    Args:
+        model (cobra.Model): The cobra model.
+        enzyme_dict (dict): A dictionary containing enzyme IDs as keys and etfl.Enzyme objects as values.
+        genes_dict (dict): A dictionary containing enzyme IDs as keys and OrderedSet of gene IDs as values.
+        enz_coupl_params (dict): Configuration parameters for the enzyme coupling.
+        verbose (bool): If True, prints status updates. Default is False.
+    Returns:
+        rxn_enz_dict (dict): A dictionary containing cobra.Reaction objects as keys and lists of etfl.Enzyme objects, with correct k values, as values.
+    """
+    
+    rxn_enz_dict = {}
+    init_num_enzymes = len(enzyme_dict)
+
+    kcat_df = model_io.import_kcat_data(enz_coupl_params.kcat_file, enz_coupl_params.k_cat_default, verbose)
+
+    # Loop through each reaction in the model
+    for rxn in model.reactions:
+        # Get the list of genes related to the reaction in the model
+        rxn_genes = OrderedSet([gene.id for gene in rxn.genes])
+
+        # Compute the Jaccard similarity between the genes for the reaction, and the genes for each enzyme, to try to associate the reaction with an enzyme. Store in a dataframe.
+        jaccard_scores = pd.Series({enz: utils.jaccard_score(rxn_genes, enz_genes) for enz, enz_genes in genes_dict.items()})
+        matched_enz = [enzyme_dict[score.index] for score in jaccard_scores if abs(jaccard_scores - 1.) <= enz_coupl_params.jaccard_tol] # List of etfl.Enzyme objects which are a perfect Jaccard match
+
+        # If there are no perfect matches
+        # TODO: add further logic to catch non-perfect matches and add them to matched_enz. For example:
+        #   specific reactions which need manual enzyme assignment
+        #   for reactions with two enzymes but only one is known, infer composition of the other
+        #   for genes missing from the GEM model but present in the protein complex data
+        #   monomeric enzymes (only one gene in the gene set), removing those which are part of a larger complex to avoid redunancy
+        #   infer from GPR
+        # Only if enzyme_inference is True, else do not infer any data and only use what is given.
+        ...
+        
+        if len(matched_enz) > 0:
+            rxn_enz_dict[rxn] = list(set(matched_enz)) # ensure that the list of enzymes is unique
+
+        else:
+            # TODO: add logic for various cases where no enzyme(s) are found for a given reaction. For example:
+            #   Add monomeric enzymes for each gene assigned to an unmatched reaction.
+            #   For enzymes with multiple kcat values, create new enzyme for each individual kcat
+            # Add new enzymes to enzyme_dict (only add new enzymes if enzyme_inference is True)
+            ...
+
+        for enz in rxn_enz_dict[rxn]:
+            # find enzyme in the dataframe
+            row = kcat_df[kcat_df['prot_id'] == enz.id]
+
+            # If the enzyme is found in the dataframe, extract the kcat value(s) from the dataframe and set it in the Enzyme object, else leave it as the default value
+            if not row.empty: 
+                enz.kcat_fwd = row['k_cat_fwd']
+                enz.kcat_bwd = row['k_cat_bwd'] 
+
+        # TODO: add kcat fwd/bwd values depending on the logic (monomeric enzymes, transport reactions, manual values etc.)
+        ...
+        
+    if verbose:
+        if enz_coupl_params.enzyme_inference: print(f"Inference step created {len(enzyme_dict) - init_num_enzymes} new enzymes.")
+        print(f"{len(enzyme_dict)} enzymes successfully associated to {len(rxn_enz_dict)} reactions.")
+
+    return rxn_enz_dict
+
 def develop_coupling_dict(model: cobra.Model, enz_coupl_params: dict, verbose: bool = False) -> dict:
     """
-    Develop a dictionary coupling all metabolic reactions to a list of etfl.Enzyme objects.
+    Develop a dictionary coupling several metabolic reactions to a list of etfl.Enzyme objects.
     Args:
         model (cobra.Model): The model to extract coupling information from.
         enz_coupl_params (dict): Configuration parameters for the creation of the coupling dictionary.
         verbose (bool): If True, prints status updates. Default is False.
     Returns:
-        coupling_dict (dict): A dictionary (cobra.Reaction: cobra.Enzyme) containing the coupling information for each reaction in the model.
+        coupling_dict (dict): A dictionary (cobra.Reaction: list of cobra.Enzyme) containing the coupling information for some reactions in the model.
     """
 
     if verbose: print("")
@@ -211,5 +281,63 @@ def develop_coupling_dict(model: cobra.Model, enz_coupl_params: dict, verbose: b
 
     # Merging the dataframes into a single dataframe
     prot_complx_df = model_io.merge_protein_complex_data(prot_complx_dfs, enz_coupl_params.comp_coeff_mismatch_treatment, verbose)
+
+    if verbose: print("")
+
+    # Creating a dictionary of protein-complex:etfl.Enzyme objects from the protein complex dataframe
+    enzyme_dict = model_io.assoc_prot_enz(prot_complx_df, verbose)
+
+    # Creating a dictionary of protein-complex (str) : genes ID (OrderedSet) pairs from the protein complex dataframe
+    genes_dict = {prot_ID : OrderedSet(genes) for prot_ID, genes in zip(prot_complx_df['prot_id'], prot_complx_df['gene_id'])}
+
+    if verbose: print("")
+
+    # Couple as many cobra reactions as possible to to one or multiple catalyzing enzymes (in a dict)
+    rxn_enz_dict = assoc_rxn_enz(model, enzyme_dict, genes_dict, enz_coupl_params, verbose)
     
-    #
+    return rxn_enz_dict
+
+def create_ETFL_model(model: cobra.Model, baseline_config: dict, etfl_config: dict, solver_config: dict, verbose: bool = False) -> ThermoMEModel:
+    """
+    Create the ETFL model from the baseline model, loading in thermo data from the data folder specified in the config file
+    and setting solver configuration parameters.
+    Args:
+        model (cobra.Model): The baseline model to use as a template for the ETFL model.
+        baseline_config (dict): Configuration parameters for the baseline model.
+        etfl_config (dict): Configuration parameters for the ETFL model.
+        solver_config (dict): Configuration parameters for the solver.
+        verbose (bool): If True, prints status updates. Default is False.
+    Returns:
+        ETFL_model (ThermoMEModel): The created ETFL model.
+    """
+
+    if verbose: print("")
+
+    # Load thermodynamic database
+    thermo_data = model_io.import_thermo_data(etfl_config.thermo_data.file_name, verbose)
+
+    if verbose: print("")    
+
+    # Create the ETFL model
+    ETFL_model = ThermoMEModel(thermo_data = thermo_data, 
+                               model = model, 
+                               name = etfl_config.model_name,
+                               growth_reaction = baseline_config.biomass_rxn_id,
+                               mu_range = (etfl_config.mu_discr.mu_min, etfl_config.mu_discr.mu_max),
+                               n_mu_bins = etfl_config.mu_discr.mu_bins,
+                               solver = solver_config.name,                               
+                               )
+    
+    # Additional model setup
+    ETFL_model.solver.configuration.verbosity = int(verbose)
+    ETFL_model.solver.configuration.tolerances.feasibility = solver_config.tolerance
+    ETFL_model.solver.configuration.timeout = solver_config.timeout
+
+    # Prepare and convert the model for TFBA
+    ETFL_model.prepare()
+    ETFL_model.convert()
+
+    if verbose: print(f"Sucessfully created ETFL model {etfl_config.name}.")
+
+    return ETFL_model
+

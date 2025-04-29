@@ -26,17 +26,33 @@ baseline:
       RNA: -174.494
       DNA: -174.494
     mass_ratio_normalization: True # if True, the mass ratios of the BBBs are normalized so that their sum is 1
+
 etfl:
+  model_name: "choETFL"
   GAM_params: # configuration for growth-associated maintenance operations
     GAM_mets: ['atp[c]', 'adp[c]', 'h[c]', 'h2o[c]', 'pi[c]'] # list of GAM metabolites by ID in the biomass rxn
-  enz_coupl_params: # configuration for enzyme coupling
-    prot_complx_files: ['cho_prot_complx1.csv', 'cho_prot_complx2.csv'] # list of .csv data files containing the protein complex data to be imported (should be located in data/ folder)
+  enz_coupl_params: # configuration for reaction-enzyme coupling
+    #prot_complx_files: ['cho_prot_complx1.csv', 'cho_prot_complx2.csv'] # list of .csv data files containing the protein complex data to be imported (should be located in data/ folder)
+    prot_complx_files: ['cho_prot_complx_test.csv']
     comp_coeff_mismatch_treatment: 2 # how to treat instances where, for a given product, the two entries for the same product appear where monomer counts differ (this is an error in the data). 0 = take the lowest value, 1 = take the highest value, 2 = take the average, 3 = take the value which appeared first, 4 = take the value which appeared last
+    jaccard_tol: 1e-4 # tolerance for the Jaccard distance between a gene set for a reaction and a gene set for an enzyme to consider a perfect match
+    enzyme_inference: True
+  k_constants:
+    k_cat_file: "k_cat_test.csv" # file containing the k_cat values for the enzymes (should be located in data/ folder)
+    k_cat_default: 0.5 # default k_cat value for enzymes with no k_cat value in the data file (usually the average k_cat value)
+    k_cat_transport: 1000000
+    k_deg_enz: 0.0001 # degradation rate of enzymes
+    k_deg_mrna: 0.0001 # degradation rate of mRNA
   mu_discr:
     mu_bins: 128 # number of bins for the discretization of the growth rate
     mu_min: 0 # minimum growth rate
     mu_max: 0.5 # maximum growth rate
-  
+  thermo_data:
+    file_name: "thermo_data_test.thermodb"
 
-solver: "gurobi"
+solver:
+  name: "gurobi"
+  timeout: 7200 # seconds
+  tolerance: 1e-9
+
 verbose: True

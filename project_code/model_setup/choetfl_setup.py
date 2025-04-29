@@ -31,7 +31,7 @@ def main(config: str = "default.yml"):
     ### BASELINE MODEL ###
 
     # Importing the baseline iCHO2291 model in .xml format from which choETFL is constructed.
-    baseline_model, _ = model_io.import_xml_model(config.baseline.file_name, config.solver, config.verbose)
+    baseline_model, _ = model_io.import_xml_model(config.baseline.file_name, config.solver.name, config.verbose)
 
     # Sanitizing metabolite and reaction names so that any IDs starting with a digit are prefixed with an underscore.
     #sanitized_model = model_ops.sanitize_model(baseline_model, config.verbose) TODO: Check if this is necessary
@@ -42,13 +42,20 @@ def main(config: str = "default.yml"):
     # Extracting the mass ratios of each biomass building block (BBB) from the biomass reaction of the baseline model
     mass_ratios = model_ops.compute_BBB_mass_ratios(sanitized_model, config.baseline.biomass_rxn_id, config.baseline.BBBs_params, config.verbose)
     
-    ### MODEL MODIFICATION ###
+    ### ETFL MODEL CREATION ###
     
     # Removing growth associated maintenance (GAM) cost of ATP from the biomass reaction; cost is later added explicitly
     GAM_modified_model = model_ops.modify_GAM(sanitized_model, config.baseline.biomass_rxn_id, config.baseline.BBBs_params, config.etfl.GAM_params, config.verbose)
 
     # Developing coupling dictionary of (Reaction:Enzyme list) pairs
-    coupling_dict = model_ops.develop_coupling_dict(GAM_modified_model, config.etfl.enz_coupl_params, config.verbose)
+    rxn_enz_coupling_dict = model_ops.develop_coupling_dict(GAM_modified_model, config.etfl.enz_coupl_params, config.verbose)
+
+    # Create and configure ETFL model
+    ETFL_model = model_ops.create_ETFL_model(GAM_modified_model, config.baseline, config.etfl, config.solver, config.verbose)
+
+    
+    
+    
 
 if __name__ == "__main__":
     main("testing.yml")

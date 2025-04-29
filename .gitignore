@@ -2,6 +2,7 @@
 /data/
 /models/
 /outputs/
+questions.txt
 
 # Ignore any pychaches
 **/__pycache__/
