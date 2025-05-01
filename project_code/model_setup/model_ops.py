@@ -130,7 +130,6 @@ def compute_BBB_mass_ratios(model: cobra.Model, biomass_rxn_id: str, BBBs_params
             # compute mass ratio
             molecular_weights = get_MWs(model, BBBs_params.constituent_mets[bbb], BBBs_params.mw_correction.get(bbb, 0))
             stoichiometric_coeffs = get_stoichiometric_coeffs(model, BBBs_params.constituent_mets[bbb], biomass_rxn, BBBs_params.genmets.get(bbb, None), subreactions.get(bbb, None))
-            #breakpoint()
             # Calculate the mass ratio for each metabolite in the biomass reaction
             mass_ratios[bbb] = sum([-stoich_coeff * molecular_weights[met] for met, stoich_coeff in stoichiometric_coeffs.items()])/1000
             if verbose: print(f"Computed mass ratio of {bbb} as {mass_ratios[bbb]:.5f} g/gDW.")
@@ -341,3 +340,94 @@ def create_ETFL_model(model: cobra.Model, baseline_config: dict, etfl_config: di
 
     return ETFL_model
 
+def fix_protein_alloc(model: ThermoMEModel, protein_mass_ratio: float) -> None:
+    ...
+
+def fix_RNA_alloc(model: ThermoMEModel, rna_mass_ratio: float) -> None:
+    ...
+
+def fix_DNA_alloc(model: ThermoMEModel, dna_mass_ratio: float, gc_ratio: float, chromosome_length: float) -> None:
+    ...
+
+def constrain_enzymes(model: ThermoMEModel, protein_mass_ratio: dict) -> None:
+    ...
+
+def update_copy_numbers(model: ThermoMEModel, copy_dict: dict) -> None:
+    ...
+
+def develop_trna_enz_coupling_dict(model: ThermoMEModel, charging_enz_dict: dict) -> dict:
+    ...
+
+def populate_ETFL_model(model: ThermoMEModel, mass_ratios: dict, rxn_enz_coupling_dict: dict, etfl_config: dict) -> None:
+    """
+    Populate the ETFL model with proteomics, metabolomics, and transcriptomics data. Applies modifications directly to the passed
+    model, so has no return value.
+    Args:
+        model (ThermoMEModel): The ETFL model to populate.
+        mass_ratios (dict): A dictionary containing the mass ratios of the biomass building blocks.
+        rxn_enz_coupling_dict (dict): A dictionary containing the coupling information for the reactions in the model.
+        etfl_config (dict): Configuration parameters for the ETFL model.
+    """
+
+    nucleotides_sequences = model_io.get_nucleotides_sequences(...)
+    model.add_nucleotide_sequences(nucleotides_sequences)
+
+    aa_sequences = model_io.get_amino_acid_sequences(...)
+    model.add_peptide_sequences(aa_sequences)
+    
+    essential_BBs = model_io.get_essential_BBs(...)
+    aa_dict = model_io.get_aa_dict(...)
+    rna_nucleotides_tp = model_io.get_rna_nucleotides_tp(...)
+    rna_nucleotides_mp = model_io.get_rna_nucleotides_mp(...)
+    model.add_essentials(essential_BBs, aa_dict, rna_nucleotides_tp, rna_nucleotides_mp)
+
+    mrna_dict = model_io.get_mrna_dict(...)
+    model.add_mrnas(mrna_dict)
+
+    for rib_ID, free_rib_ratio in etfl_config.ribosome_ratios:
+        ribosome = model_io.get_ribosomes(rib_ID)
+        model.add_ribosome(ribosome, free_rib_ratio)
+
+    for rnap_ID, free_rnap_ratio in etfl_config.rnap_ratios:
+        rnap = model_io.get_rnap(rnap_ID)
+        model.add_rnap(rnap, free_rnap_ratio)
+
+    transcription_dict = model_io.get_transcription_dict(...)
+    model.add_transcription_by(transcription_dict)
+
+    translation_dict = model_io.get_translation_dict(...)
+    model.add_translation_by(translation_dict)
+
+    model.build_expression()
+    model.add_enzymatic_coupling(rxn_enz_coupling_dict)
+
+    charging_enz_list, charging_enz_dict = model_io.get_trna_charging_enzymes(...)
+    model.add_enzymes(charging_enz_list)
+
+    model.add_dummies(nt_ratios = etfl_config.nt_ratios, 
+                      mrna_kdeg = etfl_config.k_constants.k_deg_mrna, 
+                      mrna_length = etfl_config.mrna_length_avg, 
+                      aa_ratios = etfl_config.aa_ratios, 
+                      enzyme_kdeg = etfl_config.k_constants.k_deg_enz, 
+                      peptide_length = etfl_config.peptide_length_avg)
+    
+    if etfl_config.variable_allocation:
+        # TODO: add logic for variable allocation
+        ...
+    else:
+        fix_protein_alloc(model, mass_ratios['protein'])
+        fix_RNA_alloc(model, mass_ratios['RNA'])
+        fix_DNA_alloc(model, mass_ratios['DNA'], etfl_config.gc_ratio, etfl_config.chromosome_length)
+
+    update_copy_numbers(model, etfl_config.copy_dict)
+
+    model.populate_expression()
+
+    model.add_trna_mass_balances()
+
+    trna_enz_coupling_dict = develop_trna_enz_coupling_dict(model, charging_enz_dict)
+    model.add_enzymatic_coupling(trna_enz_coupling_dict)
+
+    if etfl_config.constrain_enzymes: constrain_enzymes(model, mass_ratios['protein'])
+
+    model.repair()

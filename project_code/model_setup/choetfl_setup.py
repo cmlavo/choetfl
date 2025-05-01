@@ -28,6 +28,7 @@ def main(config: str = "default.yml"):
     # Loading the configuration file
     config = utils.load_config(config)
 
+
     ### BASELINE MODEL ###
 
     # Importing the baseline iCHO2291 model in .xml format from which choETFL is constructed.
@@ -42,6 +43,7 @@ def main(config: str = "default.yml"):
     # Extracting the mass ratios of each biomass building block (BBB) from the biomass reaction of the baseline model
     mass_ratios = model_ops.compute_BBB_mass_ratios(sanitized_model, config.baseline.biomass_rxn_id, config.baseline.BBBs_params, config.verbose)
     
+
     ### ETFL MODEL CREATION ###
     
     # Removing growth associated maintenance (GAM) cost of ATP from the biomass reaction; cost is later added explicitly
@@ -50,12 +52,17 @@ def main(config: str = "default.yml"):
     # Developing coupling dictionary of (Reaction:Enzyme list) pairs
     rxn_enz_coupling_dict = model_ops.develop_coupling_dict(GAM_modified_model, config.etfl.enz_coupl_params, config.verbose)
 
-    # Create and configure ETFL model
+    # Create and configure initial ETFL model
     ETFL_model = model_ops.create_ETFL_model(GAM_modified_model, config.baseline, config.etfl, config.solver, config.verbose)
 
-    
-    
-    
+
+    ### ETFL MODEL REFINEMENT AND EXPORT ###
+
+    # Adding proteomics and metabolomics, sequence data to the ETFL model
+    model_ops.populate_ETFL_model(ETFL_model, mass_ratios, rxn_enz_coupling_dict, config.etfl)
+
+    # Exporting the ETFL model to .xml format
+    model_io.export_model(ETFL_model, config.etfl.model_name, config.verbose)    
 
 if __name__ == "__main__":
     main("testing.yml")

@@ -49,11 +49,11 @@ def import_xml_model(model_name: str, solver: str = 'gurobi', verbose: bool = Fa
     
     return cobra_model, model_validation
 
-def export_model(model: cobra.Model, model_name: str, solver: str = 'gurobi', verbose: bool = False) -> None:
+def export_model(model: cobra.Model, model_name: str, verbose: bool = False) -> None:
     """
     Exports a COBRA ETFL model to a .xml file.
     """
-    pass
+    ...
 
 def import_protein_complex_data(file_name: str, verbose: bool = False) -> pd.DataFrame:
     """

@@ -49,6 +49,22 @@ etfl:
     mu_max: 0.5 # maximum growth rate
   thermo_data:
     file_name: "thermo_data_test.thermodb"
+  sequence_data:
+    nucleotide_sequence_file:
+    aminoacid_sequence_file:
+  ribosome_ratios: {} # dict of ribosome ratios for each ribosome type
+  rnap_ratios: {} # dict of RNA polymerase ratios for each RNA polymerase type
+  aa_ratios: {} # dict of amino acid ratios for each amino acid type
+  gc_ratio:
+  mrna_length_avg:
+  peptide_length_avg:
+  chromosome_length:
+  copy_dict: {} # dict of copy numbers for rRNAs
+
+  variable_allocation: False # 'True' value not currently supported
+
+  constrain_enzymes: True
+
 
 solver:
   name: "gurobi"
