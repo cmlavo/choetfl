@@ -1,7 +1,7 @@
 # Ignore data, models, outputs folders
-/data/
-/models/
-/outputs/
+#/data/
+#/models/
+#/outputs/
 questions.txt
 
 # Ignore any pychaches
